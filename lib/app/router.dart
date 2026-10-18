@@ -10,6 +10,7 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/onboarding/presentation/onboarding_shell.dart';
 import '../features/plan/presentation/plan_screen.dart';
 import '../features/mentor/presentation/mentor_screen.dart';
+import '../features/mentor/presentation/mentor_select_screen.dart';
 import '../features/workout/presentation/active_workout_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -26,6 +27,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/workout',
       builder: (context, state) => const ActiveWorkoutScreen(),
+    ),
+    GoRoute(
+      path: '/mentor-select',
+      builder: (context, state) => const MentorSelectScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
