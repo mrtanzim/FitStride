@@ -4,7 +4,6 @@ import '../core/theme/colors.dart';
 import '../core/theme/typography.dart';
 import '../core/widgets/ambient_background.dart';
 import '../core/widgets/app_bottom_nav.dart';
-import '../core/widgets/glass_card.dart';
 import '../core/widgets/quick_log_sheet.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/onboarding/presentation/onboarding_shell.dart';
@@ -12,6 +11,7 @@ import '../features/plan/presentation/plan_screen.dart';
 import '../features/mentor/presentation/mentor_screen.dart';
 import '../features/mentor/presentation/mentor_select_screen.dart';
 import '../features/workout/presentation/active_workout_screen.dart';
+import '../features/progress/presentation/progress_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -115,7 +115,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/progress',
-              builder: (context, state) => _buildPlaceholderScreen('Progress'),
+              builder: (context, state) => const ProgressScreen(),
             ),
           ],
         ),
@@ -123,28 +123,6 @@ final appRouter = GoRouter(
     ),
   ],
 );
-
-Widget _buildPlaceholderScreen(String title) {
-  return Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: GlassCard(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(title, style: AppText.h2),
-            const SizedBox(height: 8),
-            Text(
-              'Planned for subsequent implementation phases.',
-              style: AppText.label,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
 
 void _showQuickLogSheet(BuildContext context) {
   showQuickLogSheet(context);
