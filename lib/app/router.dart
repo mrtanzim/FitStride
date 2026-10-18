@@ -6,6 +6,7 @@ import '../core/widgets/ambient_background.dart';
 import '../core/widgets/app_bottom_nav.dart';
 import '../core/widgets/glass_card.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/onboarding/presentation/onboarding_shell.dart';
 import '../features/plan/presentation/plan_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -15,6 +16,10 @@ final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   routes: [
+    GoRoute(
+      path: '/onboarding',
+      builder: (context, state) => const OnboardingShell(),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return Scaffold(
