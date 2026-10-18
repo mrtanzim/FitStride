@@ -12,9 +12,13 @@ import '../features/mentor/presentation/mentor_screen.dart';
 import '../features/mentor/presentation/mentor_select_screen.dart';
 import '../features/workout/presentation/active_workout_screen.dart';
 import '../features/progress/presentation/progress_screen.dart';
+import '../core/widgets/forge_drawer.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'root');
+
+final GlobalKey<ScaffoldState> _scaffoldKey =
+    GlobalKey<ScaffoldState>(debugLabel: 'appShell');
 
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -35,7 +39,10 @@ final appRouter = GoRouter(
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return Scaffold(
+          key: _scaffoldKey,
           backgroundColor: AppColors.bgDeep,
+          drawer: const ForgeDrawer(),
+          drawerEdgeDragWidth: 0,
           body: AmbientBackground(
             child: Stack(
               children: [
@@ -67,9 +74,7 @@ final appRouter = GoRouter(
             GoRoute(
               path: '/',
               builder: (context, state) => HomeScreen(
-                onTalkToMentor: () {
-                  // Switch to mentor tab
-                },
+                onTalkToMentor: () => context.go('/mentor'),
                 onStartWorkout: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

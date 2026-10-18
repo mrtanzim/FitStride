@@ -79,27 +79,30 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.lime.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Container(
-                    color: const Color(0xFF18221B),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      color: AppColors.lime,
-                      size: 26,
+              GestureDetector(
+                onTap: () => Scaffold.of(context).openDrawer(),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.lime.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Container(
+                      color: const Color(0xFF18221B),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        color: AppColors.lime,
+                        size: 26,
+                      ),
                     ),
                   ),
                 ),
