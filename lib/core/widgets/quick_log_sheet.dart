@@ -1,0 +1,552 @@
+import 'package:flutter/material.dart';
+
+// Helper chip widget used in Water tile bottom content
+Widget _chip(String label, {required bool isLime}) {
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+    decoration: BoxDecoration(
+      color: isLime
+          ? const Color(0xFFD4FF14).withValues(alpha: 0.15)
+          : Colors.white.withValues(alpha: 0.06),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(
+        color: isLime
+            ? const Color(0xFFD4FF14).withValues(alpha: 0.35)
+            : Colors.white.withValues(alpha: 0.10),
+      ),
+    ),
+    child: Center(
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: isLime ? const Color(0xFFD4FF14) : Colors.white,
+        ),
+      ),
+    ),
+  );
+}
+
+/// Shows the Quick Log bottom sheet.
+void showQuickLogSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.60),
+    builder: (context) => const _QuickLogSheet(),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// _QuickLogSheet
+// ---------------------------------------------------------------------------
+
+class _QuickLogSheet extends StatefulWidget {
+  const _QuickLogSheet();
+
+  @override
+  State<_QuickLogSheet> createState() => _QuickLogSheetState();
+}
+
+class _QuickLogSheetState extends State<_QuickLogSheet>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+  bool _askMentorPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tiles = <_QuickLogTile>[
+      // Tile 0 — Water
+      _QuickLogTile(
+        icon: Icons.water_drop,
+        iconColor: const Color(0xFF67E8F9),
+        iconBgColor: const Color(0xFF67E8F9).withValues(alpha: 0.10),
+        iconBorderColor: const Color(0xFF67E8F9).withValues(alpha: 0.25),
+        badge: 'Hydration',
+        badgeColor: const Color(0xFF9AA39C),
+        title: 'Water',
+        subtitle: 'Target: 3.2L / day',
+        bottomContent: Row(
+          children: [
+            Expanded(child: _chip('+250 ml', isLime: true)),
+            const SizedBox(width: 6),
+            Expanded(child: _chip('+500 ml', isLime: false)),
+          ],
+        ),
+      ),
+      // Tile 1 — Protein
+      _QuickLogTile(
+        icon: Icons.bolt,
+        iconColor: const Color(0xFFD4FF14),
+        iconBgColor: const Color(0xFFD4FF14).withValues(alpha: 0.10),
+        iconBorderColor: const Color(0xFFD4FF14).withValues(alpha: 0.25),
+        badge: '118g left',
+        badgeColor: const Color(0xFF9AA39C),
+        title: 'Protein',
+        subtitle: 'Shakes, eggs, dal, meat',
+        bottomContent: Row(
+          children: [
+            const Text(
+              '+ Quick Add',
+              style: TextStyle(fontSize: 11, color: Color(0xFFD4FF14)),
+            ),
+            const Spacer(),
+            const Icon(
+              Icons.add_circle_outline,
+              color: Color(0xFFD4FF14),
+              size: 14,
+            ),
+          ],
+        ),
+      ),
+      // Tile 2 — Meal
+      _QuickLogTile(
+        icon: Icons.restaurant,
+        iconColor: const Color(0xFFFCD34D),
+        iconBgColor: const Color(0xFFFCD34D).withValues(alpha: 0.10),
+        iconBorderColor: const Color(0xFFFCD34D).withValues(alpha: 0.25),
+        badge: '৳ Budget',
+        badgeColor: const Color(0xFF9AA39C),
+        title: 'Meal',
+        subtitle: 'Breakfast, Lunch, Dinner',
+        bottomContent: Row(
+          children: [
+            const Text(
+              'Scan or enter',
+              style: TextStyle(fontSize: 11, color: Color(0xFF9AA39C)),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right, color: Color(0xFF9AA39C), size: 14),
+          ],
+        ),
+      ),
+      // Tile 3 — Weight
+      _QuickLogTile(
+        icon: Icons.monitor_weight_outlined,
+        iconColor: const Color(0xFF6EE7B7),
+        iconBgColor: const Color(0xFF6EE7B7).withValues(alpha: 0.10),
+        iconBorderColor: const Color(0xFF6EE7B7).withValues(alpha: 0.25),
+        badge: '74.5 kg',
+        badgeColor: const Color(0xFF9AA39C),
+        title: 'Weight',
+        subtitle: 'Morning weigh-in',
+        bottomContent: Row(
+          children: [
+            const Text(
+              'Log scale reading',
+              style: TextStyle(fontSize: 11, color: Color(0xFF9AA39C)),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right, color: Color(0xFF9AA39C), size: 14),
+          ],
+        ),
+      ),
+      // Tile 4 — Workout note
+      _QuickLogTile(
+        icon: Icons.edit_note,
+        iconColor: const Color(0xFFC4B5FD),
+        iconBgColor: const Color(0xFFC4B5FD).withValues(alpha: 0.10),
+        iconBorderColor: const Color(0xFFC4B5FD).withValues(alpha: 0.25),
+        badge: 'RPE & Form',
+        badgeColor: const Color(0xFF9AA39C),
+        title: 'Workout note',
+        subtitle: 'Soreness, joint feel, PR',
+        bottomContent: Row(
+          children: [
+            const Text(
+              'Write note',
+              style: TextStyle(fontSize: 11, color: Color(0xFF9AA39C)),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right, color: Color(0xFF9AA39C), size: 14),
+          ],
+        ),
+      ),
+      // Tile 5 — Slip
+      _QuickLogTile(
+        icon: Icons.warning_amber_rounded,
+        iconColor: const Color(0xFFFDA4AF),
+        iconBgColor: const Color(0xFFFDA4AF).withValues(alpha: 0.10),
+        iconBorderColor: const Color(0xFFFDA4AF).withValues(alpha: 0.25),
+        badge: 'Reset & Log',
+        badgeColor: const Color(0xFFFDA4AF),
+        title: 'Slip (Sugar or Junk)',
+        subtitle: 'Zero judgment, recalculate',
+        tileAccentColor: const Color(0xFFFDA4AF),
+        bottomContent: Row(
+          children: [
+            const Text(
+              'Log slip item',
+              style: TextStyle(fontSize: 11, color: Color(0xFFFDA4AF)),
+            ),
+            const Spacer(),
+            const Icon(
+              Icons.chevron_right,
+              color: Color(0xFFFDA4AF),
+              size: 14,
+            ),
+          ],
+        ),
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF111613),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.14),
+            width: 1,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.85),
+            blurRadius: 40,
+            offset: const Offset(0, -12),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Drag handle
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 0),
+                child: Center(
+                  child: Container(
+                    width: 48,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.20),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+              ),
+              // 2. Header row
+              Padding(
+                padding: const EdgeInsets.only(top: 10, bottom: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            FadeTransition(
+                              opacity: _pulseAnimation,
+                              child: Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFD4FF14),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'INSTANT ENTRY',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.2,
+                                color: const Color(
+                                  0xFFD4FF14,
+                                ).withValues(alpha: 0.90),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Quick Log',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.06),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.10),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          size: 16,
+                          color: Colors.white.withValues(alpha: 0.60),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 3. GridView
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.75,
+                children: tiles,
+              ),
+              // 4. Spacer
+              const SizedBox(height: 16),
+              // 5. Ask mentor button
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                onTapDown: (_) =>
+                    setState(() => _askMentorPressed = true),
+                onTapUp: (_) =>
+                    setState(() => _askMentorPressed = false),
+                onTapCancel: () =>
+                    setState(() => _askMentorPressed = false),
+                child: AnimatedScale(
+                  scale: _askMentorPressed ? 0.99 : 1.0,
+                  duration: const Duration(milliseconds: 100),
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFD4FF14),
+                        width: 2,
+                      ),
+                      color: Colors.transparent,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          color: Color(0xFFD4FF14),
+                          size: 16,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Ask mentor',
+                          style: TextStyle(
+                            color: Color(0xFFD4FF14),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // 6. Spacer
+              const SizedBox(height: 16),
+              // 7. Close X indicator
+              Center(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFD4FF14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFD4FF14).withValues(alpha: 0.25),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Transform.rotate(
+                      angle: 0.7853981633974483, // pi/4 = 45 degrees
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.black,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _QuickLogTile
+// ---------------------------------------------------------------------------
+
+class _QuickLogTile extends StatefulWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBgColor;
+  final Color iconBorderColor;
+  final String badge;
+  final Color badgeColor;
+  final String title;
+  final String subtitle;
+  final Widget bottomContent;
+  final Color? tileAccentColor;
+
+  const _QuickLogTile({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBgColor,
+    required this.iconBorderColor,
+    required this.badge,
+    required this.badgeColor,
+    required this.title,
+    required this.subtitle,
+    required this.bottomContent,
+    this.tileAccentColor,
+  });
+
+  @override
+  State<_QuickLogTile> createState() => _QuickLogTileState();
+}
+
+class _QuickLogTileState extends State<_QuickLogTile> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF1E241F).withValues(alpha: 0.70),
+                const Color(0xFF121613).withValues(alpha: 0.80),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.09),
+            ),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Top row: icon box + badge
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: widget.iconBgColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: widget.iconBorderColor),
+                    ),
+                    child: Icon(widget.icon, color: widget.iconColor, size: 18),
+                  ),
+                  Flexible(
+                    child: Text(
+                      widget.badge,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: widget.badgeColor,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
+              // Middle: title + subtitle
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF9AA39C),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+              // Bottom: divider + action
+              Column(
+                children: [
+                  Divider(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    height: 16,
+                  ),
+                  widget.bottomContent,
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
