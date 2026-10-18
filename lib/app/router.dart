@@ -8,6 +8,7 @@ import '../core/widgets/glass_card.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/onboarding/presentation/onboarding_shell.dart';
 import '../features/plan/presentation/plan_screen.dart';
+import '../features/workout/presentation/active_workout_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -19,6 +20,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingShell(),
+    ),
+    GoRoute(
+      path: '/workout',
+      builder: (context, state) => const ActiveWorkoutScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
