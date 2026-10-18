@@ -9,6 +9,7 @@ import '../core/widgets/quick_log_sheet.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/onboarding/presentation/onboarding_shell.dart';
 import '../features/plan/presentation/plan_screen.dart';
+import '../features/mentor/presentation/mentor_screen.dart';
 import '../features/workout/presentation/active_workout_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -99,8 +100,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/mentor',
-              builder: (context, state) =>
-                  _buildPlaceholderScreen('Mentor Chat'),
+              builder: (context, state) => const MentorScreen(),
             ),
           ],
         ),
