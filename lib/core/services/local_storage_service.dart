@@ -70,4 +70,55 @@ class LocalStorageService {
     if (decoded['date'] != dateStr) return 0;
     return decoded['total_ml'] as int? ?? 0;
   }
+
+  // ─── AI Mentor configuration ────────────────────────────────────────────────
+  static const _aiProviderKey = 'forge_ai_provider'; // 'gemini' | 'openrouter'
+  static const _geminiKeyKey = 'forge_gemini_key';
+  static const _openrouterKeyKey = 'forge_openrouter_key';
+  static const _openrouterModelKey = 'forge_openrouter_model';
+
+  /// Currently selected AI provider. Defaults to 'gemini'.
+  static Future<String> getAiProvider() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_aiProviderKey) ?? 'gemini';
+  }
+
+  static Future<void> saveAiProvider(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_aiProviderKey, value);
+  }
+
+  /// Stored Gemini API key. Empty by default — the AppConfig.geminiApiKey
+  /// fallback happens at call time inside MentorRepository, not here.
+  static Future<String> getGeminiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_geminiKeyKey) ?? '';
+  }
+
+  static Future<void> saveGeminiKey(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_geminiKeyKey, value);
+  }
+
+  /// Stored OpenRouter API key. Empty by default.
+  static Future<String> getOpenRouterKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_openrouterKeyKey) ?? '';
+  }
+
+  static Future<void> saveOpenRouterKey(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_openrouterKeyKey, value);
+  }
+
+  /// Selected OpenRouter model id. Defaults to 'google/gemini-flash-1.5'.
+  static Future<String> getOpenRouterModel() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_openrouterModelKey) ?? 'google/gemini-flash-1.5';
+  }
+
+  static Future<void> saveOpenRouterModel(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_openrouterModelKey, value);
+  }
 }

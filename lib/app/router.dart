@@ -13,6 +13,8 @@ import '../features/mentor/presentation/mentor_screen.dart';
 import '../features/mentor/presentation/mentor_select_screen.dart';
 import '../features/workout/presentation/active_workout_screen.dart';
 import '../features/progress/presentation/progress_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
+import '../features/auth/presentation/auth_screen.dart';
 import '../core/widgets/forge_drawer.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -41,6 +43,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/mentor-select',
       builder: (context, state) => const MentorSelectScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/auth',
+      builder: (context, state) => const AuthScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {

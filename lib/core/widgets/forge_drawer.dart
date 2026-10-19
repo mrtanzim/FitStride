@@ -224,11 +224,7 @@ class ForgeDrawer extends StatelessWidget {
                     title: 'Settings',
                     onTap: () {
                       Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Settings coming soon'),
-                        ),
-                      );
+                      context.go('/settings');
                     },
                   ),
                   _DrawerItem(
