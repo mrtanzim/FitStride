@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/tracking/presentation/tracking_providers.dart';
+import '../services/local_storage_service.dart';
 
 // Helper chip widget used in Water tile bottom content
 Widget _chip(String label, {required bool isLime}) {
@@ -28,6 +31,14 @@ Widget _chip(String label, {required bool isLime}) {
   );
 }
 
+// Tappable wrapper around _chip
+Widget _tappableChip(String label, {required bool isLime, required VoidCallback onTap}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: _chip(label, isLime: isLime),
+  );
+}
+
 /// Shows the Quick Log bottom sheet.
 void showQuickLogSheet(BuildContext context) {
   showModalBottomSheet(
@@ -35,7 +46,7 @@ void showQuickLogSheet(BuildContext context) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.60),
-    builder: (context) => const _QuickLogSheet(),
+    builder: (context) => _QuickLogSheet(),
   );
 }
 
@@ -43,14 +54,14 @@ void showQuickLogSheet(BuildContext context) {
 // _QuickLogSheet
 // ---------------------------------------------------------------------------
 
-class _QuickLogSheet extends StatefulWidget {
+class _QuickLogSheet extends ConsumerStatefulWidget {
   const _QuickLogSheet();
 
   @override
-  State<_QuickLogSheet> createState() => _QuickLogSheetState();
+  ConsumerState<_QuickLogSheet> createState() => _QuickLogSheetState();
 }
 
-class _QuickLogSheetState extends State<_QuickLogSheet>
+class _QuickLogSheetState extends ConsumerState<_QuickLogSheet>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
@@ -74,6 +85,139 @@ class _QuickLogSheetState extends State<_QuickLogSheet>
     super.dispose();
   }
 
+  Future<void> _logWater(int ml) async {
+    // Always save locally as fallback
+    await LocalStorageService.logWaterLocal(ml);
+
+    // Try Supabase; if error, still show success (local save succeeded)
+    try {
+      await ref.read(trackingRepositoryProvider).logWater(ml);
+    } catch (_) {
+      // Supabase failed — local save already done above
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '💧 +$ml ml logged',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: const Color(0xFF1E241F),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: const Color(0xFF67E8F9).withValues(alpha: 0.35),
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showWeightDialog() {
+    final TextEditingController weightCtrl = TextEditingController();
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A1A2E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: Colors.white.withValues(alpha: 0.12),
+            ),
+          ),
+          title: const Text(
+            'Log Weight',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.10),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            child: TextField(
+              controller: weightCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+              decoration: const InputDecoration(
+                hintText: 'e.g. 74.5',
+                hintStyle: TextStyle(color: Color(0xFF9AA39C)),
+                border: InputBorder.none,
+                suffixText: 'kg',
+                suffixStyle: TextStyle(color: Color(0xFF9AA39C)),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF9AA39C)),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                final val = double.tryParse(weightCtrl.text.trim());
+                if (val == null || val <= 0) return;
+                Navigator.of(ctx).pop();
+                try {
+                  await ref
+                      .read(trackingRepositoryProvider)
+                      .logWeight(val);
+                } catch (_) {}
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '⚖️ ${val.toStringAsFixed(1)} kg logged',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      backgroundColor: const Color(0xFF1E241F),
+                      duration: const Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: const Color(0xFF6EE7B7).withValues(alpha: 0.35),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFFD4FF14),
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Log',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tiles = <_QuickLogTile>[
@@ -89,9 +233,21 @@ class _QuickLogSheetState extends State<_QuickLogSheet>
         subtitle: 'Target: 3.2L / day',
         bottomContent: Row(
           children: [
-            Expanded(child: _chip('+250 ml', isLime: true)),
+            Expanded(
+              child: _tappableChip(
+                '+250 ml',
+                isLime: true,
+                onTap: () => _logWater(250),
+              ),
+            ),
             const SizedBox(width: 6),
-            Expanded(child: _chip('+500 ml', isLime: false)),
+            Expanded(
+              child: _tappableChip(
+                '+500 ml',
+                isLime: false,
+                onTap: () => _logWater(500),
+              ),
+            ),
           ],
         ),
       ),
@@ -151,6 +307,7 @@ class _QuickLogSheetState extends State<_QuickLogSheet>
         badgeColor: const Color(0xFF9AA39C),
         title: 'Weight',
         subtitle: 'Morning weigh-in',
+        onTap: _showWeightDialog,
         bottomContent: Row(
           children: [
             const Text(
@@ -430,6 +587,7 @@ class _QuickLogTile extends StatefulWidget {
   final String subtitle;
   final Widget bottomContent;
   final Color? tileAccentColor;
+  final VoidCallback? onTap;
 
   const _QuickLogTile({
     required this.icon,
@@ -442,6 +600,7 @@ class _QuickLogTile extends StatefulWidget {
     required this.subtitle,
     required this.bottomContent,
     this.tileAccentColor,
+    this.onTap,
   });
 
   @override
@@ -454,6 +613,7 @@ class _QuickLogTileState extends State<_QuickLogTile> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTap: widget.onTap,
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
