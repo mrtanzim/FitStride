@@ -1,4 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/supabase_client.dart';
 
 class TrackingRepository {
