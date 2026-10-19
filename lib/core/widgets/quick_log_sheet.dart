@@ -216,10 +216,7 @@ class _QuickLogSheetState extends State<_QuickLogSheet>
         color: const Color(0xFF111613),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         border: Border(
-          top: BorderSide(
-            color: Colors.white.withValues(alpha: 0.14),
-            width: 1,
-          ),
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.14), width: 1),
         ),
         boxShadow: [
           BoxShadow(
@@ -229,21 +226,22 @@ class _QuickLogSheetState extends State<_QuickLogSheet>
           ),
         ],
       ),
+      // Use DraggableScrollableSheet inner scroll to avoid overflow
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Drag handle
-              Padding(
-                padding: const EdgeInsets.only(top: 12, bottom: 0),
-                child: Center(
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12, bottom: 8),
                   child: Container(
                     width: 48,
-                    height: 6,
+                    height: 5,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.20),
                       borderRadius: BorderRadius.circular(3),
@@ -252,96 +250,108 @@ class _QuickLogSheetState extends State<_QuickLogSheet>
                 ),
               ),
               // 2. Header row
-              Padding(
-                padding: const EdgeInsets.only(top: 10, bottom: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            FadeTransition(
-                              opacity: _pulseAnimation,
-                              child: Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFD4FF14),
-                                  shape: BoxShape.circle,
-                                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          FadeTransition(
+                            opacity: _pulseAnimation,
+                            child: Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFD4FF14),
+                                shape: BoxShape.circle,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'INSTANT ENTRY',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.2,
-                                color: const Color(
-                                  0xFFD4FF14,
-                                ).withValues(alpha: 0.90),
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'INSTANT ENTRY',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.2,
+                              color: const Color(0xFFD4FF14).withValues(alpha: 0.90),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'Quick Log',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
                           ),
-                        ),
-                      ],
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.06),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.10),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.close,
-                          size: 16,
-                          color: Colors.white.withValues(alpha: 0.60),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Quick Log',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
                         ),
                       ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.06),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                      ),
+                      child: Icon(Icons.close, size: 16, color: Colors.white.withValues(alpha: 0.60)),
                     ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // 3. 2x3 grid using Column of Rows for precise control
+              // Row 1
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: tiles[0]),
+                    const SizedBox(width: 12),
+                    Expanded(child: tiles[1]),
                   ],
                 ),
               ),
-              // 3. GridView
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.75,
-                children: tiles,
+              const SizedBox(height: 12),
+              // Row 2
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: tiles[2]),
+                    const SizedBox(width: 12),
+                    Expanded(child: tiles[3]),
+                  ],
+                ),
               ),
-              // 4. Spacer
-              const SizedBox(height: 16),
-              // 5. Ask mentor button
+              const SizedBox(height: 12),
+              // Row 3
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: tiles[4]),
+                    const SizedBox(width: 12),
+                    Expanded(child: tiles[5]),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              // 4. Ask mentor button
               GestureDetector(
                 onTap: () => Navigator.of(context).pop(),
-                onTapDown: (_) =>
-                    setState(() => _askMentorPressed = true),
-                onTapUp: (_) =>
-                    setState(() => _askMentorPressed = false),
-                onTapCancel: () =>
-                    setState(() => _askMentorPressed = false),
+                onTapDown: (_) => setState(() => _askMentorPressed = true),
+                onTapUp: (_) => setState(() => _askMentorPressed = false),
+                onTapCancel: () => setState(() => _askMentorPressed = false),
                 child: AnimatedScale(
                   scale: _askMentorPressed ? 0.99 : 1.0,
                   duration: const Duration(milliseconds: 100),
@@ -349,20 +359,13 @@ class _QuickLogSheetState extends State<_QuickLogSheet>
                     height: 52,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFFD4FF14),
-                        width: 2,
-                      ),
+                      border: Border.all(color: const Color(0xFFD4FF14), width: 2),
                       color: Colors.transparent,
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(
-                          Icons.chat_bubble_outline,
-                          color: Color(0xFFD4FF14),
-                          size: 16,
-                        ),
+                      children: [
+                        Icon(Icons.chat_bubble_outline, color: Color(0xFFD4FF14), size: 16),
                         SizedBox(width: 8),
                         Text(
                           'Ask mentor',
@@ -378,9 +381,8 @@ class _QuickLogSheetState extends State<_QuickLogSheet>
                   ),
                 ),
               ),
-              // 6. Spacer
-              const SizedBox(height: 16),
-              // 7. Close X indicator
+              const SizedBox(height: 14),
+              // 5. Close indicator
               Center(
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
@@ -399,12 +401,8 @@ class _QuickLogSheetState extends State<_QuickLogSheet>
                       ],
                     ),
                     child: Transform.rotate(
-                      angle: 0.7853981633974483, // pi/4 = 45 degrees
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.black,
-                        size: 20,
-                      ),
+                      angle: 0.7853981633974483,
+                      child: const Icon(Icons.add, color: Colors.black, size: 20),
                     ),
                   ),
                 ),
@@ -477,7 +475,7 @@ class _QuickLogTileState extends State<_QuickLogTile> {
               color: Colors.white.withValues(alpha: 0.09),
             ),
           ),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
