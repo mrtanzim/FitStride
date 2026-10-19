@@ -453,10 +453,13 @@ class _MentorScreenState extends State<MentorScreen>
                 isMentor ? MainAxisAlignment.start : MainAxisAlignment.end,
             children: [
               if (isMentor) ...[_buildMentorAvatar(), const SizedBox(width: 8)],
-              Flexible(
-                child: isMentor
-                    ? _buildMentorBubble(msg)
-                    : _buildUserBubble(msg),
+              Expanded(
+                child: Align(
+                  alignment: isMentor ? Alignment.centerLeft : Alignment.centerRight,
+                  child: isMentor
+                      ? _buildMentorBubble(msg)
+                      : _buildUserBubble(msg),
+                ),
               ),
               if (!isMentor) ...[const SizedBox(width: 8), _buildUserAvatar()],
             ],
@@ -505,47 +508,41 @@ class _MentorScreenState extends State<MentorScreen>
   }
 
   Widget _buildMentorBubble(_ChatMessage msg) {
-    return IntrinsicWidth(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Lime left border
-          Container(
-            width: 2,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Lime left border
+        Container(
+          width: 2,
+          decoration: BoxDecoration(
+            color: AppColors.lime,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(2),
+              bottomLeft: Radius.circular(2),
+            ),
+          ),
+        ),
+        // Bubble
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.lime,
+              color: const Color(0xFF1A2A1E),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(2),
-                bottomLeft: Radius.circular(2),
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.10),
               ),
             ),
+            child: _buildMentorText(msg.text),
           ),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A2A1E),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.10),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildMentorText(msg.text),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
