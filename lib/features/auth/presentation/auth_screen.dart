@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/supabase_client.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/widgets/ambient_background.dart';
@@ -16,23 +17,29 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLoading = false;
-  bool _otpSent = false;
+  bool _linkSent = false;
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
+
+  Timer? _resendTimer;
+  int _resendCooldown = 0;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _otpController.dispose();
+    _resendTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _sendOtp() async {
+  Future<void> _sendLink() async {
     setState(() => _isLoading = true);
     try {
-      await supabase.auth.signInWithOtp(email: _emailController.text.trim());
+      await supabase.auth.signInWithOtp(
+        email: _emailController.text.trim(),
+        emailRedirectTo: null,
+      );
+      _startResendTimer();
       setState(() {
-        _otpSent = true;
+        _linkSent = true;
         _isLoading = false;
       });
     } catch (e) {
@@ -48,26 +55,22 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  Future<void> _verifyOtp() async {
-    setState(() => _isLoading = true);
-    try {
-      await supabase.auth.verifyOTP(
-        email: _emailController.text.trim(),
-        token: _otpController.text.trim(),
-        type: OtpType.email,
-      );
-      setState(() => _isLoading = false);
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Invalid code. Try again.'),
-            backgroundColor: Colors.red.shade900,
-          ),
-        );
+  void _startResendTimer() {
+    _resendTimer?.cancel();
+    setState(() => _resendCooldown = 60);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
       }
-    }
+      setState(() {
+        _resendCooldown--;
+        if (_resendCooldown <= 0) {
+          _resendCooldown = 0;
+          timer.cancel();
+        }
+      });
+    });
   }
 
   @override
@@ -105,7 +108,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                       const SizedBox(height: 48),
-                      if (!_otpSent) _buildEmailView() else _buildOtpView(),
+                      if (!_linkSent) _buildEmailView() else _buildLinkSentView(),
                       const SizedBox(height: 48),
                     ],
                   ),
@@ -141,7 +144,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Enter your email to receive a one-time code.',
+          'Enter your email and we\'ll send you a magic link.',
           style: GoogleFonts.inter(
             fontSize: 13,
             color: AppColors.textSecondary,
@@ -178,9 +181,9 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         const SizedBox(height: 16),
         LimeButton(
-          label: 'Send Code',
+          label: 'Send Link',
           height: 52,
-          onPressed: _isLoading ? null : _sendOtp,
+          onPressed: _isLoading ? null : _sendLink,
         ),
         const SizedBox(height: 24),
         Center(
@@ -197,74 +200,56 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _buildOtpView() {
+  Widget _buildLinkSentView() {
+    final email = _emailController.text.trim();
+    final canResend = _resendCooldown == 0;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        const Icon(
+          Icons.mark_email_unread_outlined,
+          color: AppColors.lime,
+          size: 64,
+        ),
+        const SizedBox(height: 20),
         Text(
-          'Check your email',
+          'Check your email!',
           style: GoogleFonts.inter(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 10),
         Text(
-          'Enter the 6-digit code sent to ${_emailController.text.trim()}.',
+          'Click the link in the email sent to $email to sign in.',
           style: GoogleFonts.inter(
             fontSize: 13,
             color: AppColors.textSecondary,
           ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.10),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: TextField(
-            controller: _otpController,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              color: Colors.white,
-            ),
-            decoration: InputDecoration(
-              hintText: '000000',
-              hintStyle: GoogleFonts.inter(
-                fontSize: 15,
-                color: AppColors.textDisabled,
-              ),
-              border: InputBorder.none,
-              fillColor: Colors.transparent,
-              filled: true,
-              counterText: '',
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 28),
         LimeButton(
-          label: 'Verify Code',
+          label: canResend ? 'Resend' : 'Resend in ${_resendCooldown}s',
           height: 52,
-          onPressed: _isLoading ? null : _verifyOtp,
+          onPressed: canResend ? _sendLink : null,
         ),
         const SizedBox(height: 12),
         Center(
           child: TextButton(
             onPressed: () {
+              _resendTimer?.cancel();
               setState(() {
-                _otpSent = false;
-                _otpController.clear();
+                _linkSent = false;
+                _resendCooldown = 0;
+                _emailController.clear();
               });
             },
             child: Text(
-              '← Back / Change email',
+              '← Change email',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: AppColors.textSecondary,
