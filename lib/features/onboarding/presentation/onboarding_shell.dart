@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/services/local_storage_service.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/typography.dart';
@@ -23,6 +23,7 @@ class OnboardingShell extends ConsumerStatefulWidget {
 class _OnboardingShellState extends ConsumerState<OnboardingShell>
     with SingleTickerProviderStateMixin {
   int _pageIndex = 0;
+  bool _isLoading = false;
   late PageController _pageController;
   late AnimationController _pulseCtrl;
   late Animation<double> _pulseAnim;
@@ -40,10 +41,7 @@ class _OnboardingShellState extends ConsumerState<OnboardingShell>
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId != null) {
-        ref.read(onboardingProvider.notifier).initWithUserId(userId);
-      }
+      ref.read(onboardingProvider.notifier).initWithUserId('local');
     });
   }
 
@@ -77,21 +75,22 @@ class _OnboardingShellState extends ConsumerState<OnboardingShell>
   void _handleBuildPlan() => _finishOnboarding();
 
   Future<void> _finishOnboarding() async {
-    final repo = ref.read(profileRepositoryProvider);
     final profile = ref.read(onboardingProvider).profile;
-
-    if (profile == null) {
-      if (mounted) context.go('/');
-      return;
-    }
-
+    if (profile == null) return;
+    setState(() => _isLoading = true);
     try {
-      await repo.upsertProfile(profile.copyWith(onboarded: true));
-      await repo.markOnboarded();
-    } catch (_) {
-      // Navigate even on failure; user can re-onboard later
+      await LocalStorageService.saveProfile(profile.toJson());
+      await LocalStorageService.markOnboarded();
+      if (mounted) context.go('/');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    if (mounted) context.go('/');
   }
 
   @override
@@ -321,13 +320,21 @@ class _OnboardingShellState extends ConsumerState<OnboardingShell>
         24,
       ),
       child: LimeButton(
-        label: _pageIndex == 3 ? 'Build my plan' : 'Continue',
-        onPressed: _pageIndex == 3 ? _handleBuildPlan : _handleContinue,
-        trailingIcon: Icon(
-          _pageIndex == 3 ? Icons.auto_awesome_rounded : Icons.arrow_forward_rounded,
-          color: AppColors.onLime,
-          size: 18,
-        ),
+        label: _isLoading
+            ? 'Saving...'
+            : (_pageIndex == 3 ? 'Build my plan' : 'Continue'),
+        onPressed: _isLoading
+            ? null
+            : (_pageIndex == 3 ? _handleBuildPlan : _handleContinue),
+        trailingIcon: _isLoading
+            ? null
+            : Icon(
+                _pageIndex == 3
+                    ? Icons.auto_awesome_rounded
+                    : Icons.arrow_forward_rounded,
+                color: AppColors.onLime,
+                size: 18,
+              ),
       ),
     );
   }

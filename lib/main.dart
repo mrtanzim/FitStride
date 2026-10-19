@@ -6,10 +6,15 @@ import 'app/config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: AppConfig.supabaseUrl,
-    publishableKey: AppConfig.supabaseAnonKey,
-  );
+  try {
+    await Supabase.initialize(
+      url: AppConfig.supabaseUrl,
+      publishableKey: AppConfig.supabaseAnonKey,
+    );
+  } catch (e) {
+    // Supabase unavailable — app runs in offline mode
+    debugPrint('Supabase init failed: $e');
+  }
   runApp(
     const ProviderScope(
       child: ForgeApp(),

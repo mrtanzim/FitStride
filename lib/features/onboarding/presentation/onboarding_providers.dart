@@ -1,11 +1,12 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import '../../../core/services/local_storage_service.dart';
 import '../data/profile_model.dart';
 import '../data/profile_repository.dart';
 
 // ---------------------------------------------------------------------------
-// Repository provider
+// Repository provider — kept for future Supabase sync
 // ---------------------------------------------------------------------------
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
@@ -44,9 +45,7 @@ class OnboardingState {
 // ---------------------------------------------------------------------------
 
 class OnboardingNotifier extends StateNotifier<OnboardingState> {
-  final ProfileRepository _repo;
-
-  OnboardingNotifier(this._repo) : super(const OnboardingState());
+  OnboardingNotifier() : super(const OnboardingState());
 
   static const _goalMap = {
     'muscle': 'hypertrophy',
@@ -62,19 +61,21 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     'elite',
   ];
 
-  /// Loads any existing profile; creates a blank one if none found.
+  /// Loads any existing local profile; creates a blank one if none found.
   Future<void> initWithUserId(String userId) async {
     state = state.copyWith(isLoading: true);
     try {
-      final existing = await _repo.fetchProfile();
+      final data = await LocalStorageService.loadProfile();
+      final existing = data != null ? ProfileModel.fromJson(data) : null;
       state = state.copyWith(
         isLoading: false,
-        profile: existing ?? ProfileModel(id: userId),
+        profile:
+            existing ?? ProfileModel(id: userId.isEmpty ? 'local' : userId),
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        profile: ProfileModel(id: userId),
+        profile: ProfileModel(id: userId.isEmpty ? 'local' : userId),
         error: e.toString(),
       );
     }
@@ -134,10 +135,12 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
 final onboardingProvider =
     StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
-  return OnboardingNotifier(ref.watch(profileRepositoryProvider));
+  return OnboardingNotifier();
 });
 
-/// Thin async provider for reading the persisted profile (e.g. router redirect).
-final profileProvider = FutureProvider<ProfileModel?>((ref) async {
-  return ref.read(profileRepositoryProvider).fetchProfile();
+/// Async provider for reading the locally persisted profile.
+final localProfileProvider = FutureProvider<ProfileModel?>((ref) async {
+  final data = await LocalStorageService.loadProfile();
+  if (data == null) return null;
+  return ProfileModel.fromJson(data);
 });
