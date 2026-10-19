@@ -307,97 +307,104 @@ class _MentorScreenState extends State<MentorScreen>
 
   Widget _buildWelcomeState(double bottomPad) {
     const prompts = [
-      (Icons.fitness_center_rounded, 'Create a workout plan for weight loss'),
-      (Icons.restaurant_rounded, 'Suggest high protein meals'),
-      (Icons.bar_chart_rounded, 'How to build muscle faster?'),
-      (Icons.bedtime_rounded, 'Improve my sleep & recovery'),
+      (Icons.fitness_center_rounded, 'Create a workout plan'),
+      (Icons.restaurant_rounded, 'High protein meals'),
+      (Icons.bar_chart_rounded, 'Build muscle faster?'),
+      (Icons.bedtime_rounded, 'Sleep & recovery tips'),
     ];
-    return SingleChildScrollView(
+    return ListView(
       padding: EdgeInsets.fromLTRB(16, 24, 16, bottomPad + 16),
-      child: Column(
-        children: [
-          // Orb hero
-          const SizedBox(width: 80, height: 80, child: MentorOrb(size: 80)),
-          const SizedBox(height: 16),
-          Text(
+      children: [
+        // Orb + title
+        Center(child: SizedBox(width: 80, height: 80, child: MentorOrb(size: 80))),
+        const SizedBox(height: 16),
+        Center(
+          child: Text(
             'Ask Your AI Coach',
             style: AppText.h2.copyWith(fontSize: 22, fontWeight: FontWeight.w800),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 6),
-          Text(
+        ),
+        const SizedBox(height: 6),
+        Center(
+          child: Text(
             'Get personalized workout plans, nutrition tips\nand answers to your fitness questions.',
-            style: AppText.label.copyWith(fontSize: 12.5, height: 1.5),
+            style: AppText.label.copyWith(fontSize: 12, height: 1.5),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          // Quick prompts 2x2 grid
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 2.8,
-            children: prompts.map((p) {
-              return GestureDetector(
-                onTap: () {
-                  _inputController.text = p.$2;
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withValues(alpha: 0.05),
-                        Colors.white.withValues(alpha: 0.01),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: AppColors.lime.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.lime.withValues(alpha: 0.20)),
-                        ),
-                        child: Icon(p.$1, size: 16, color: AppColors.lime),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          p.$2,
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFFE5E5E5),
-                            height: 1.3,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
+        ),
+        const SizedBox(height: 24),
+        // Quick prompts — 2 rows of 2
+        Row(
+          children: [
+            Expanded(child: _promptCard(prompts[0].$1, prompts[0].$2)),
+            const SizedBox(width: 10),
+            Expanded(child: _promptCard(prompts[1].$1, prompts[1].$2)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: _promptCard(prompts[2].$1, prompts[2].$2)),
+            const SizedBox(width: 10),
+            Expanded(child: _promptCard(prompts[3].$1, prompts[3].$2)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        // Initial mentor message
+        _buildMessage(const _ChatMessage(
+          sender: _Sender.mentor,
+          text: 'Hi Tanzim! 👋\nWhat\'s your main goal today?\nYou can ask me anything about workouts, nutrition, or recovery.',
+          time: '9:41 AM',
+        )),
+      ],
+    );
+  }
+
+  Widget _promptCard(IconData icon, String text) {
+    return GestureDetector(
+      onTap: () => _inputController.text = text,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.05),
+              Colors.white.withValues(alpha: 0.01),
+            ],
           ),
-          const SizedBox(height: 20),
-          // Initial mentor message
-          _buildMessage(const _ChatMessage(
-            sender: _Sender.mentor,
-            text: 'Hi Tanzim! 👋\nWhat\'s your main goal today?\nYou can ask me anything about workouts, nutrition, or recovery.',
-            time: '9:41 AM',
-          )),
-        ],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.lime.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.lime.withValues(alpha: 0.20)),
+              ),
+              child: Icon(icon, size: 16, color: AppColors.lime),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFFE5E5E5),
+                  height: 1.3,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
