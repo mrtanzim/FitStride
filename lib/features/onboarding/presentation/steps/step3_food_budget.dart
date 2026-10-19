@@ -8,7 +8,18 @@ import '../../../../core/widgets/glass_card.dart';
 class Step3FoodBudget extends StatefulWidget {
   final VoidCallback onContinue;
 
-  const Step3FoodBudget({super.key, required this.onContinue});
+  /// Called every time any value changes so the shell can persist data.
+  final void Function({
+    required int budgetBdt,
+    required List<String> foodsEaten,
+    required List<String> foodsAvoided,
+  })? onDataChanged;
+
+  const Step3FoodBudget({
+    super.key,
+    required this.onContinue,
+    this.onDataChanged,
+  });
 
   @override
   State<Step3FoodBudget> createState() => _Step3FoodBudgetState();
@@ -61,6 +72,14 @@ class _Step3FoodBudgetState extends State<Step3FoodBudget>
   void dispose() {
     _pulseCtrl.dispose();
     super.dispose();
+  }
+
+  void _notify() {
+    widget.onDataChanged?.call(
+      budgetBdt: _budget.round(),
+      foodsEaten: _selectedFoods.toList(),
+      foodsAvoided: _restrictions.where((r) => r != 'none').toList(),
+    );
   }
 
   String get _monthlyBudget {
@@ -209,7 +228,10 @@ class _Step3FoodBudgetState extends State<Step3FoodBudget>
               min: 200,
               max: 2000,
               divisions: 72,
-              onChanged: (v) => setState(() => _budget = v),
+              onChanged: (v) {
+                setState(() => _budget = v);
+                _notify();
+              },
             ),
           ),
           const SizedBox(height: 8),
@@ -231,7 +253,10 @@ class _Step3FoodBudgetState extends State<Step3FoodBudget>
   Widget _buildPresetPill(String label, double value) {
     final active = _budget.round() == value.round();
     return GestureDetector(
-      onTap: () => setState(() => _budget = value),
+      onTap: () {
+        setState(() => _budget = value);
+        _notify();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
@@ -310,6 +335,7 @@ class _Step3FoodBudgetState extends State<Step3FoodBudget>
                     _selectedFoods = Set.from(_selectedFoods)..add(food.key);
                   }
                 });
+                _notify();
               },
               child: GlassCard(
                 isSelected: selected,
@@ -372,6 +398,7 @@ class _Step3FoodBudgetState extends State<Step3FoodBudget>
                     updated.isEmpty ? <String>{'none'} : updated;
               }
             });
+            _notify();
           },
           child: Container(
             padding:

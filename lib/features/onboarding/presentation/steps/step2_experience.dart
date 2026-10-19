@@ -7,7 +7,17 @@ import '../../../../core/widgets/glass_card.dart';
 class Step2Experience extends StatefulWidget {
   final VoidCallback onContinue;
 
-  const Step2Experience({super.key, required this.onContinue});
+  /// Called every time any value changes so the shell can persist data.
+  final void Function({
+    required int levelIndex,
+    required String trainingPlace,
+  })? onDataChanged;
+
+  const Step2Experience({
+    super.key,
+    required this.onContinue,
+    this.onDataChanged,
+  });
 
   @override
   State<Step2Experience> createState() => _Step2ExperienceState();
@@ -47,6 +57,13 @@ class _Step2ExperienceState extends State<Step2Experience>
   void dispose() {
     _pulseCtrl.dispose();
     super.dispose();
+  }
+
+  void _notify() {
+    widget.onDataChanged?.call(
+      levelIndex: _experienceLevel,
+      trainingPlace: _facility,
+    );
   }
 
   @override
@@ -181,7 +198,10 @@ class _Step2ExperienceState extends State<Step2Experience>
               min: 0,
               max: 4,
               divisions: 4,
-              onChanged: (v) => setState(() => _experienceLevel = v.round()),
+              onChanged: (v) {
+                setState(() => _experienceLevel = v.round());
+                _notify();
+              },
             ),
           ),
           const SizedBox(height: 4),
@@ -190,7 +210,10 @@ class _Step2ExperienceState extends State<Step2Experience>
             children: [
               for (int i = 0; i < _yearLabels.length; i++)
                 GestureDetector(
-                  onTap: () => setState(() => _experienceLevel = i),
+                  onTap: () {
+                    setState(() => _experienceLevel = i);
+                    _notify();
+                  },
                   child: Text(
                     _yearLabels[i],
                     style: AppText.label.copyWith(
@@ -229,7 +252,10 @@ class _Step2ExperienceState extends State<Step2Experience>
   ) {
     final isSelected = _facility == key;
     return GestureDetector(
-      onTap: () => setState(() => _facility = key),
+      onTap: () {
+        setState(() => _facility = key);
+        _notify();
+      },
       child: GlassCard(
         isSelected: isSelected,
         hasGlow: isSelected,

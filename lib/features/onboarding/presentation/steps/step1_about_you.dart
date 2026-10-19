@@ -7,7 +7,19 @@ import '../../../../core/widgets/glass_card.dart';
 class Step1AboutYou extends StatefulWidget {
   final VoidCallback onContinue;
 
-  const Step1AboutYou({super.key, required this.onContinue});
+  /// Called every time any value changes so the shell can persist data.
+  final void Function({
+    required int age,
+    required double heightCm,
+    required double weightKg,
+    required String goalUiKey,
+  })? onDataChanged;
+
+  const Step1AboutYou({
+    super.key,
+    required this.onContinue,
+    this.onDataChanged,
+  });
 
   @override
   State<Step1AboutYou> createState() => _Step1AboutYouState();
@@ -46,6 +58,15 @@ class _Step1AboutYouState extends State<Step1AboutYou>
   void dispose() {
     _pulseCtrl.dispose();
     super.dispose();
+  }
+
+  void _notify() {
+    widget.onDataChanged?.call(
+      age: _age,
+      heightCm: _heightCm,
+      weightKg: _weightKg,
+      goalUiKey: _selectedGoal,
+    );
   }
 
   int get _bmr => (10 * _weightKg + 6.25 * _heightCm - 5 * _age + 5).round();
@@ -135,8 +156,14 @@ class _Step1AboutYouState extends State<Step1AboutYou>
       ),
       child: Row(
         children: [
-          _buildToggleOption('Metric', _isMetric, () => setState(() => _isMetric = true)),
-          _buildToggleOption('Imperial', !_isMetric, () => setState(() => _isMetric = false)),
+          _buildToggleOption('Metric', _isMetric, () {
+            setState(() => _isMetric = true);
+            _notify();
+          }),
+          _buildToggleOption('Imperial', !_isMetric, () {
+            setState(() => _isMetric = false);
+            _notify();
+          }),
         ],
       ),
     );
@@ -174,8 +201,14 @@ class _Step1AboutYouState extends State<Step1AboutYou>
             'AGE',
             '$_age',
             'YRS',
-            () => setState(() => _age = (_age - 1).clamp(14, 99)),
-            () => setState(() => _age = (_age + 1).clamp(14, 99)),
+            () {
+              setState(() => _age = (_age - 1).clamp(14, 99));
+              _notify();
+            },
+            () {
+              setState(() => _age = (_age + 1).clamp(14, 99));
+              _notify();
+            },
           ),
         ),
         const SizedBox(width: 8),
@@ -184,8 +217,14 @@ class _Step1AboutYouState extends State<Step1AboutYou>
             'HEIGHT',
             _heightDisplay,
             _heightUnit,
-            () => setState(() => _heightCm = (_heightCm - 1).clamp(120, 240)),
-            () => setState(() => _heightCm = (_heightCm + 1).clamp(120, 240)),
+            () {
+              setState(() => _heightCm = (_heightCm - 1).clamp(120, 240));
+              _notify();
+            },
+            () {
+              setState(() => _heightCm = (_heightCm + 1).clamp(120, 240));
+              _notify();
+            },
           ),
         ),
         const SizedBox(width: 8),
@@ -194,8 +233,14 @@ class _Step1AboutYouState extends State<Step1AboutYou>
             'WEIGHT',
             _weightDisplay,
             _weightUnit,
-            () => setState(() => _weightKg = (_weightKg - 0.5).clamp(30, 200)),
-            () => setState(() => _weightKg = (_weightKg + 0.5).clamp(30, 200)),
+            () {
+              setState(() => _weightKg = (_weightKg - 0.5).clamp(30, 200));
+              _notify();
+            },
+            () {
+              setState(() => _weightKg = (_weightKg + 0.5).clamp(30, 200));
+              _notify();
+            },
           ),
         ),
       ],
@@ -248,7 +293,10 @@ class _Step1AboutYouState extends State<Step1AboutYou>
       ({String key, String label, IconData icon}) goal) {
     final isSelected = _selectedGoal == goal.key;
     return GestureDetector(
-      onTap: () => setState(() => _selectedGoal = goal.key),
+      onTap: () {
+        setState(() => _selectedGoal = goal.key);
+        _notify();
+      },
       child: GlassCard(
         isSelected: isSelected,
         hasGlow: isSelected,

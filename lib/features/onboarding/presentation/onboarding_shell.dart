@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/widgets/ambient_background.dart';
 import '../../../core/widgets/lime_button.dart';
+import 'onboarding_providers.dart';
 import 'steps/step1_about_you.dart';
 import 'steps/step2_experience.dart';
 import 'steps/step3_food_budget.dart';
 import 'steps/step4_routine.dart';
 
-class OnboardingShell extends StatefulWidget {
+class OnboardingShell extends ConsumerStatefulWidget {
   const OnboardingShell({super.key});
 
   @override
-  State<OnboardingShell> createState() => _OnboardingShellState();
+  ConsumerState<OnboardingShell> createState() => _OnboardingShellState();
 }
 
-class _OnboardingShellState extends State<OnboardingShell>
+class _OnboardingShellState extends ConsumerState<OnboardingShell>
     with SingleTickerProviderStateMixin {
   int _pageIndex = 0;
   late PageController _pageController;
@@ -35,6 +38,13 @@ class _OnboardingShellState extends State<OnboardingShell>
     _pulseAnim = Tween(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId != null) {
+        ref.read(onboardingProvider.notifier).initWithUserId(userId);
+      }
+    });
   }
 
   @override
@@ -64,10 +74,30 @@ class _OnboardingShellState extends State<OnboardingShell>
 
   void _handleSkip() => _handleContinue();
 
-  void _handleBuildPlan() => context.go('/');
+  void _handleBuildPlan() => _finishOnboarding();
+
+  Future<void> _finishOnboarding() async {
+    final repo = ref.read(profileRepositoryProvider);
+    final profile = ref.read(onboardingProvider).profile;
+
+    if (profile == null) {
+      if (mounted) context.go('/');
+      return;
+    }
+
+    try {
+      await repo.upsertProfile(profile.copyWith(onboarded: true));
+      await repo.markOnboarded();
+    } catch (_) {
+      // Navigate even on failure; user can re-onboard later
+    }
+    if (mounted) context.go('/');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final notifier = ref.read(onboardingProvider.notifier);
+
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
       body: AmbientBackground(
@@ -81,9 +111,48 @@ class _OnboardingShellState extends State<OnboardingShell>
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  Step1AboutYou(onContinue: _handleContinue),
-                  Step2Experience(onContinue: _handleContinue),
-                  Step3FoodBudget(onContinue: _handleContinue),
+                  Step1AboutYou(
+                    onContinue: _handleContinue,
+                    onDataChanged: ({
+                      required int age,
+                      required double heightCm,
+                      required double weightKg,
+                      required String goalUiKey,
+                    }) {
+                      notifier.setBasics(
+                        age: age,
+                        heightCm: heightCm,
+                        weightKg: weightKg,
+                        goalUiKey: goalUiKey,
+                      );
+                    },
+                  ),
+                  Step2Experience(
+                    onContinue: _handleContinue,
+                    onDataChanged: ({
+                      required int levelIndex,
+                      required String trainingPlace,
+                    }) {
+                      notifier.setExperience(
+                        levelIndex: levelIndex,
+                        trainingPlace: trainingPlace,
+                      );
+                    },
+                  ),
+                  Step3FoodBudget(
+                    onContinue: _handleContinue,
+                    onDataChanged: ({
+                      required int budgetBdt,
+                      required List<String> foodsEaten,
+                      required List<String> foodsAvoided,
+                    }) {
+                      notifier.setFood(
+                        budgetBdt: budgetBdt,
+                        foodsEaten: foodsEaten,
+                        foodsAvoided: foodsAvoided,
+                      );
+                    },
+                  ),
                   Step4Routine(onContinue: _handleBuildPlan),
                 ],
               ),

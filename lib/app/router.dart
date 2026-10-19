@@ -23,12 +23,32 @@ final GlobalKey<NavigatorState> _rootNavigatorKey =
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
-  redirect: (context, state) {
+  redirect: (context, state) async {
     final session = Supabase.instance.client.auth.currentSession;
     final isAuth = session != null;
     final isGoingToAuth = state.matchedLocation == '/auth';
+    final isGoingToOnboarding = state.matchedLocation == '/onboarding';
+
     if (!isAuth && !isGoingToAuth) return '/auth';
     if (isAuth && isGoingToAuth) return '/';
+
+    // For authenticated users not already heading to onboarding, check the
+    // onboarded flag. An async redirect is supported by GoRouter v7+.
+    if (isAuth && !isGoingToOnboarding) {
+      try {
+        final data = await Supabase.instance.client
+            .from('profiles')
+            .select('onboarded')
+            .eq('id', session.user.id)
+            .maybeSingle();
+        final onboarded = data?['onboarded'] as bool? ?? false;
+        if (!onboarded) return '/onboarding';
+      } catch (_) {
+        // If the fetch fails (e.g. no row yet) redirect to onboarding.
+        return '/onboarding';
+      }
+    }
+
     return null;
   },
   refreshListenable: GoRouterRefreshStream(
