@@ -15,13 +15,11 @@ class _ChatMessage {
   final _Sender sender;
   final String text;
   final String time;
-  final bool hasChallengeCard;
 
   const _ChatMessage({
     required this.sender,
     required this.text,
     required this.time,
-    this.hasChallengeCard = false,
   });
 }
 
@@ -44,34 +42,7 @@ class _MentorScreenState extends State<MentorScreen>
   late final List<AnimationController> _dotControllers;
   late final List<Animation<double>> _dotAnims;
 
-  final List<_ChatMessage> _messages = [
-    const _ChatMessage(
-      sender: _Sender.mentor,
-      text: 'You skipped legs on Monday.\nProve today was different. 50 push-ups at home, now.',
-      time: '9:41 AM',
-    ),
-    const _ChatMessage(
-      sender: _Sender.user,
-      text: 'Done. ✅',
-      time: '9:42 AM',
-    ),
-    const _ChatMessage(
-      sender: _Sender.mentor,
-      text: 'Good. Don\'t make me repeat myself.',
-      time: '9:43 AM',
-      hasChallengeCard: true,
-    ),
-    const _ChatMessage(
-      sender: _Sender.user,
-      text: 'What should I eat after this?',
-      time: '9:45 AM',
-    ),
-    const _ChatMessage(
-      sender: _Sender.mentor,
-      text: 'Post-workout: rice + eggs + dal. You already know this. Stop overthinking, start eating.',
-      time: '9:46 AM',
-    ),
-  ];
+  final List<_ChatMessage> _messages = [];
 
   @override
   void initState() {
@@ -164,8 +135,11 @@ class _MentorScreenState extends State<MentorScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Get the bottom inset for the nav bar (80px nav bar + safe area)
+    final bottomPad = MediaQuery.of(context).padding.bottom + 80;
     return Scaffold(
       backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: true,
       body: AmbientBackground(
         child: SafeArea(
           bottom: false,
@@ -173,9 +147,9 @@ class _MentorScreenState extends State<MentorScreen>
             children: [
               _buildHeader(context),
               const Divider(color: Color(0x0DFFFFFF), height: 1, thickness: 1),
-              Expanded(child: _buildChatArea()),
+              Expanded(child: _buildChatArea(bottomPad)),
               _buildSuggestionChips(),
-              _buildInputDock(),
+              _buildInputDock(bottomPad),
             ],
           ),
         ),
@@ -291,10 +265,14 @@ class _MentorScreenState extends State<MentorScreen>
 
   // ─── Chat area ─────────────────────────────────────────────────────────────
 
-  Widget _buildChatArea() {
+  Widget _buildChatArea(double bottomPad) {
+    // Show empty/welcome state when no conversation yet (first load)
+    if (_messages.isEmpty) {
+      return _buildWelcomeState(bottomPad);
+    }
     return ListView(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPad + 16),
       children: [
         // Date badge
         Center(
@@ -324,6 +302,103 @@ class _MentorScreenState extends State<MentorScreen>
         if (_isTyping) _buildTypingIndicator(),
         const SizedBox(height: 8),
       ],
+    );
+  }
+
+  Widget _buildWelcomeState(double bottomPad) {
+    const prompts = [
+      (Icons.fitness_center_rounded, 'Create a workout plan for weight loss'),
+      (Icons.restaurant_rounded, 'Suggest high protein meals'),
+      (Icons.bar_chart_rounded, 'How to build muscle faster?'),
+      (Icons.bedtime_rounded, 'Improve my sleep & recovery'),
+    ];
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(16, 24, 16, bottomPad + 16),
+      child: Column(
+        children: [
+          // Orb hero
+          const SizedBox(width: 80, height: 80, child: MentorOrb(size: 80)),
+          const SizedBox(height: 16),
+          Text(
+            'Ask Your AI Coach',
+            style: AppText.h2.copyWith(fontSize: 22, fontWeight: FontWeight.w800),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Get personalized workout plans, nutrition tips\nand answers to your fitness questions.',
+            style: AppText.label.copyWith(fontSize: 12.5, height: 1.5),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          // Quick prompts 2x2 grid
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 2.8,
+            children: prompts.map((p) {
+              return GestureDetector(
+                onTap: () {
+                  _inputController.text = p.$2;
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.05),
+                        Colors.white.withValues(alpha: 0.01),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: AppColors.lime.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.lime.withValues(alpha: 0.20)),
+                        ),
+                        child: Icon(p.$1, size: 16, color: AppColors.lime),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          p.$2,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFFE5E5E5),
+                            height: 1.3,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+          // Initial mentor message
+          _buildMessage(const _ChatMessage(
+            sender: _Sender.mentor,
+            text: 'Hi Tanzim! 👋\nWhat\'s your main goal today?\nYou can ask me anything about workouts, nutrition, or recovery.',
+            time: '9:41 AM',
+          )),
+        ],
+      ),
     );
   }
 
@@ -437,7 +512,6 @@ class _MentorScreenState extends State<MentorScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildMentorText(msg.text),
-                      if (msg.hasChallengeCard) ...[const SizedBox(height: 8), _buildChallengeCard()],
                     ],
                   ),
                 ),
@@ -484,6 +558,7 @@ class _MentorScreenState extends State<MentorScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildChallengeCard() {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -655,7 +730,7 @@ class _MentorScreenState extends State<MentorScreen>
 
   // ─── Footer / input dock ───────────────────────────────────────────────────
 
-  Widget _buildInputDock() {
+  Widget _buildInputDock(double bottomPad) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -671,59 +746,38 @@ class _MentorScreenState extends State<MentorScreen>
                 decoration: BoxDecoration(
                   color: const Color(0xFF162119).withValues(alpha: 0.65),
                   borderRadius: BorderRadius.circular(100),
-                  border: Border.all(
-                    color: const Color(0xFF2D4A35),
-                  ),
+                  border: Border.all(color: const Color(0xFF2D4A35)),
                 ),
                 child: Row(
                   children: [
-                    // Plus button
                     IconButton(
                       onPressed: () {},
-                      icon: const Icon(
-                        Icons.add_rounded,
-                        size: 20,
-                        color: AppColors.textSecondary,
-                      ),
+                      icon: const Icon(Icons.add_rounded, size: 20, color: AppColors.textSecondary),
                       padding: const EdgeInsets.all(6),
                       constraints: const BoxConstraints(),
                     ),
-                    // Text field
                     Expanded(
                       child: TextField(
                         controller: _inputController,
-                        style: AppText.body.copyWith(
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
+                        style: AppText.body.copyWith(fontSize: 13, color: Colors.white),
                         decoration: InputDecoration(
                           hintText: 'Ask your mentor...',
-                          hintStyle: AppText.body.copyWith(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
+                          hintStyle: AppText.body.copyWith(fontSize: 13, color: AppColors.textSecondary),
                           border: InputBorder.none,
                           isDense: true,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 8),
                         ),
                         onSubmitted: (_) => _sendMessage(),
                         textInputAction: TextInputAction.send,
                       ),
                     ),
-                    // Mic button
                     IconButton(
                       onPressed: () {},
-                      icon: const Icon(
-                        Icons.mic_rounded,
-                        size: 20,
-                        color: AppColors.textSecondary,
-                      ),
+                      icon: const Icon(Icons.mic_rounded, size: 20, color: AppColors.textSecondary),
                       padding: const EdgeInsets.all(6),
                       constraints: const BoxConstraints(),
                     ),
                     const SizedBox(width: 4),
-                    // Send button
                     GestureDetector(
                       onTap: _sendMessage,
                       child: Container(
@@ -740,11 +794,7 @@ class _MentorScreenState extends State<MentorScreen>
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.arrow_upward_rounded,
-                          size: 18,
-                          color: AppColors.onLime,
-                        ),
+                        child: const Icon(Icons.arrow_upward_rounded, size: 18, color: AppColors.onLime),
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -754,22 +804,8 @@ class _MentorScreenState extends State<MentorScreen>
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        // iOS home bar
-        SafeArea(
-          top: false,
-          child: Center(
-            child: Container(
-              width: 128,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(100),
-              ),
-            ),
-          ),
-        ),
+        // Spacing above nav bar
+        SizedBox(height: bottomPad + 8),
       ],
     );
   }
