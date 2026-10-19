@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/theme/colors.dart';
 import '../core/theme/typography.dart';
+import '../core/utils/go_router_refresh_stream.dart';
 import '../core/widgets/ambient_background.dart';
 import '../core/widgets/app_bottom_nav.dart';
 import '../core/widgets/quick_log_sheet.dart';
+import '../features/auth/presentation/auth_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/onboarding/presentation/onboarding_shell.dart';
 import '../features/plan/presentation/plan_screen.dart';
@@ -20,7 +23,22 @@ final GlobalKey<NavigatorState> _rootNavigatorKey =
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
+  redirect: (context, state) {
+    final session = Supabase.instance.client.auth.currentSession;
+    final isAuth = session != null;
+    final isGoingToAuth = state.matchedLocation == '/auth';
+    if (!isAuth && !isGoingToAuth) return '/auth';
+    if (isAuth && isGoingToAuth) return '/';
+    return null;
+  },
+  refreshListenable: GoRouterRefreshStream(
+    Supabase.instance.client.auth.onAuthStateChange,
+  ),
   routes: [
+    GoRoute(
+      path: '/auth',
+      builder: (context, state) => const AuthScreen(),
+    ),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingShell(),
