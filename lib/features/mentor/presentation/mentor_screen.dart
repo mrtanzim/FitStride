@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/theme/colors.dart';
@@ -6,6 +5,7 @@ import '../../../core/theme/typography.dart';
 import '../../../core/widgets/ambient_background.dart';
 import '../../../core/widgets/lime_button.dart';
 import '../../../core/widgets/mentor_orb.dart';
+import '../data/mentor_repository.dart';
 
 // ─── Data model ───────────────────────────────────────────────────────────────
 
@@ -43,6 +43,7 @@ class _MentorScreenState extends State<MentorScreen>
   late final List<Animation<double>> _dotAnims;
 
   final List<_ChatMessage> _messages = [];
+  final _mentorRepo = MentorRepository();
 
   @override
   void initState() {
@@ -72,6 +73,7 @@ class _MentorScreenState extends State<MentorScreen>
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    _loadHistory();
   }
 
   @override
@@ -94,64 +96,62 @@ class _MentorScreenState extends State<MentorScreen>
     }
   }
 
-  // Generic mentor responses based on keywords
-  String _getMentorReply(String userMsg) {
-    final msg = userMsg.toLowerCase();
-    if (msg.contains('skip') || msg.contains('rest')) {
-      return 'No skipping. You already know the answer. Get moving.';
-    } else if (msg.contains('protein') || msg.contains('eat') || msg.contains('food') || msg.contains('meal')) {
-      return 'Eggs, rice, dal, chicken. That\'s your stack. 120g protein daily — non-negotiable. Track it in the log.';
-    } else if (msg.contains('workout') || msg.contains('exercise') || msg.contains('train')) {
-      return 'Today\'s plan is already set. Chest + Triceps. 6 exercises, 55 minutes. Start the session — no more questions.';
-    } else if (msg.contains('water') || msg.contains('hydrat')) {
-      return 'You\'re at 1.8L. Target is 3.2L. Drink 500ml right now. No excuses.';
-    } else if (msg.contains('sleep') || msg.contains('recover') || msg.contains('rest')) {
-      return '7-8 hours. No screen after 10pm. That\'s not a suggestion — it\'s protocol.';
-    } else if (msg.contains('weight') || msg.contains('fat') || msg.contains('lose')) {
-      return 'You\'re at 74.5kg. 2.4kg from goal. Stay in deficit 200kcal/day. The math doesn\'t care about your feelings.';
-    } else if (msg.contains('muscle') || msg.contains('gain') || msg.contains('bulk')) {
-      return 'Progressive overload. Add 2.5kg every week when you hit all reps. Simple. Boring. Works.';
-    } else if (msg.contains('motivation') || msg.contains('tired') || msg.contains('lazy')) {
-      return 'Motivation is for amateurs. You\'re building discipline. Show up. Do the work. Leave.';
-    } else if (msg.contains('progress') || msg.contains('result')) {
-      return '12 days streak. 94% compliance. You\'re doing the work. Results take 12 weeks, not 12 days. Keep going.';
-    } else {
-      const replies = [
-        'Focus. What\'s the actual question? Ask me something specific.',
-        'Stop overthinking. What\'s your next action right now?',
-        'Noted. Now go train. The gym is waiting.',
-        'That\'s handled. Stay on protocol. One day at a time.',
-        'Your plan is set. Trust the process. Execute.',
-      ];
-      return replies[DateTime.now().millisecond % replies.length];
-    }
+  void _loadHistory() async {
+    final history = await _mentorRepo.loadHistory();
+    if (!mounted || history.isEmpty) return;
+    setState(() {
+      _messages.clear();
+      for (final msg in history) {
+        _messages.add(_ChatMessage(
+          sender: msg['role'] == 'user' ? _Sender.user : _Sender.mentor,
+          text: msg['content'] as String,
+          time: _formatTs(msg['created_at'] as String),
+        ));
+      }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
-  void _sendMessage() {
+  String _formatTs(String iso) {
+    final dt = DateTime.parse(iso).toLocal();
+    final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m ${dt.hour < 12 ? "AM" : "PM"}';
+  }
+
+  void _sendMessage() async {
     final text = _inputController.text.trim();
     if (text.isEmpty) return;
     setState(() {
-      _messages.add(_ChatMessage(
-        sender: _Sender.user,
-        text: text,
-        time: _currentTime(),
-      ));
+      _messages.add(_ChatMessage(sender: _Sender.user, text: text, time: _currentTime()));
       _inputController.clear();
       _isTyping = true;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    Future.delayed(const Duration(milliseconds: 1500), () {
+
+    try {
+      final result = await _mentorRepo.sendMessage(text);
       if (!mounted) return;
       setState(() {
         _isTyping = false;
         _messages.add(_ChatMessage(
           sender: _Sender.mentor,
-          text: _getMentorReply(text),
+          text: result['reply'] as String,
           time: _currentTime(),
         ));
       });
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isTyping = false;
+        _messages.add(_ChatMessage(
+          sender: _Sender.mentor,
+          text: 'Something went wrong. Try again.',
+          time: _currentTime(),
+        ));
+      });
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   String _currentTime() {
