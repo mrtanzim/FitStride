@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/local_storage_service.dart';
@@ -204,7 +204,7 @@ class _OnboardingShellState extends ConsumerState<OnboardingShell>
           GestureDetector(
             onTap: () {
               if (_pageIndex == 0) {
-                context.pop();
+                if (context.canPop()) { if (context.canPop()) { context.pop(); } else { context.go('/'); } } else { context.go('/'); }
               } else {
                 _handlePrevious();
               }

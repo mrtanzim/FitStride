@@ -393,15 +393,19 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 ),
               ),
               const SizedBox(width: 10),
-              Text(
-                'Strength Velocity',
-                style: AppText.h3.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  'Strength Velocity',
+                  style: AppText.h3.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
-              Container(
+              const SizedBox(width: 8),
+              Flexible(
+                child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
@@ -427,6 +431,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ),
                   ],
                 ),
+              ),
               ),
             ],
           ),
@@ -565,17 +570,20 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 ),
               ),
               const SizedBox(width: 10),
-              Text(
-                'Training Discipline',
-                style: AppText.h3.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  'Training Discipline',
+                  style: AppText.h3.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
                   color: AppColors.lime,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
@@ -613,16 +621,19 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const Spacer(),
-              Container(
+              const SizedBox(width: 8),
+              Flexible(
+                child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
                   color: _surfaceHigh,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                 ),
                 child: Text(
                   '94% PROTOCOL ADHERENCE',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: AppText.label.copyWith(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -630,6 +641,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     letterSpacing: 0.5,
                   ),
                 ),
+              ),
               ),
             ],
           ),

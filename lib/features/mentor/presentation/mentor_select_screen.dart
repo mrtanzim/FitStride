@@ -1272,7 +1272,8 @@ class _MentorSelectScreenState extends State<MentorSelectScreen>
                           ),
                         ),
                         const SizedBox(width: 6),
-                        Container(
+                        Flexible(
+                          child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
@@ -1283,12 +1284,15 @@ class _MentorSelectScreenState extends State<MentorSelectScreen>
                           ),
                           child: const Text(
                             'UNFILTERED',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFFFF7575),
                             ),
                           ),
+                        ),
                         ),
                       ],
                     ),
@@ -1347,8 +1351,9 @@ class _MentorSelectScreenState extends State<MentorSelectScreen>
                   letterSpacing: 0.55,
                 ),
               ),
-              const Spacer(),
-              Container(
+              const SizedBox(width: 8),
+              Flexible(
+                child: Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
@@ -1358,12 +1363,15 @@ class _MentorSelectScreenState extends State<MentorSelectScreen>
                 ),
                 child: const Text(
                   'OPT-IN ONLY',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF995252),
                   ),
                 ),
+              ),
               ),
             ],
           )

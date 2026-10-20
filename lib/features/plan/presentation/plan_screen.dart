@@ -1,5 +1,6 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
@@ -71,7 +72,7 @@ class _PlanScreenState extends State<PlanScreen> {
           // Back button
           _CircleIconButton(
             icon: Icons.chevron_left_rounded,
-            onTap: () {},
+            onTap: () { if (context.canPop()) { context.pop(); } else { context.go('/'); } },
           ),
           const Spacer(),
           // Title + subtitle
@@ -115,7 +116,7 @@ class _PlanScreenState extends State<PlanScreen> {
           // Bookmark button
           _CircleIconButton(
             icon: Icons.bookmark_border_rounded,
-            onTap: () {},
+            onTap: () { if (context.canPop()) { context.pop(); } else { context.go('/'); } },
           ),
         ],
       ),
@@ -300,7 +301,7 @@ class _PlanScreenState extends State<PlanScreen> {
               ),
               const Spacer(),
               GestureDetector(
-                onTap: () {},
+                onTap: () { if (context.canPop()) { context.pop(); } else { context.go('/'); } },
                 child: Row(
                   children: [
                     Text(
@@ -770,7 +771,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
       onTapDown: (_) => setState(() => _hovered = true),
       onTapUp: (_) => setState(() => _hovered = false),
       onTapCancel: () => setState(() => _hovered = false),
-      onTap: () {},
+      onTap: () { if (context.canPop()) { context.pop(); } else { context.go('/'); } },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.all(12),
@@ -926,7 +927,7 @@ class _GoalCardState extends State<_GoalCard> {
       onTapDown: (_) => setState(() => _hovered = true),
       onTapUp: (_) => setState(() => _hovered = false),
       onTapCancel: () => setState(() => _hovered = false),
-      onTap: () {},
+      onTap: () { if (context.canPop()) { context.pop(); } else { context.go('/'); } },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

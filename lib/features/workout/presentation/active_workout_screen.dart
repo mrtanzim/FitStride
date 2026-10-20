@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+﻿import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -211,7 +211,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
             children: [
               // Back button
               GestureDetector(
-                onTap: () => context.pop(),
+                onTap: () { if (context.canPop()) { context.pop(); } else { context.go('/'); } },
                 child: Container(
                   width: 40,
                   height: 40,
